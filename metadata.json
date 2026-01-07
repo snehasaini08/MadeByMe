@@ -1,0 +1,8 @@
+{
+  "name": "MadeByMe - AI Powered Handmade Marketplace",
+  "description": "An intelligent marketplace for artisans to sell handmade goods with AI-assisted product listing, dynamic pricing, and multilingual support.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
