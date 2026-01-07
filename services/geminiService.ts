@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+// Initialize with the correct named parameter as per guidelines
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 export const getAIProductEnrichment = async (input: string) => {
@@ -25,7 +26,8 @@ export const getAIProductEnrichment = async (input: string) => {
         }
       }
     });
-    return JSON.parse(response.text);
+    // Use .text property directly, not as a function
+    return JSON.parse(response.text || '{}');
   } catch (error) {
     console.error("AI Error:", error);
     return null;
@@ -39,6 +41,7 @@ export const translateContent = async (text: string, targetLanguage: string) => 
       model: "gemini-3-flash-preview",
       contents: `Translate the following text to ${targetLanguage}. Ensure the tone remains respectful and artisanal: "${text}"`,
     });
+    // Use .text property directly
     return response.text;
   } catch (error) {
     console.error("Translation error:", error);
@@ -61,7 +64,8 @@ export const getSalesInsights = async (history: string) => {
         }
       }
     });
-    return JSON.parse(response.text);
+    // Use .text property directly
+    return JSON.parse(response.text || '{"tips": []}');
   } catch (error) {
     return { tips: ["Keep creating unique pieces!", "Try offering seasonal discounts.", "Share your creation story on social media."] };
   }

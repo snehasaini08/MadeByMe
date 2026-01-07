@@ -11,6 +11,9 @@ export interface User {
   language: string;
   email?: string;
   avatar?: string;
+  address?: string;
+  city?: string;
+  pincode?: string;
 }
 
 export interface Product {
@@ -26,6 +29,7 @@ export interface Product {
   rating: number;
   reviews: number;
   story?: string;
+  weightInGrams?: number; // Added for shipping calculations
 }
 
 export interface CartItem extends Product {
@@ -36,6 +40,7 @@ export interface Order {
   id: string;
   items: CartItem[];
   total: number;
+  shippingFee: number;
   status: 'Packed' | 'Shipped' | 'Out for delivery' | 'Delivered';
   date: string;
   address: string;
