@@ -78,6 +78,38 @@ export const analyzeRoomForDecor = async (base64Image: string) => {
   }
 };
 
+export const enhanceProductImage = async (base64Image: string, category: string, productName: string) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Image.split(',')[1] || base64Image
+            }
+          },
+          {
+            text: `You are a professional product photographer. Enhance this image by replacing the background with a clean, high-end studio setting that fits a ${category} product named "${productName}". Keep the product in the foreground exactly as it is, maintaining its size, shape, and colors perfectly. Use soft professional studio lighting and a complementary minimalist aesthetic background. Only return the modified image.`
+          }
+        ]
+      }
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Enhancement Error:", error);
+    return null;
+  }
+};
+
 export const translateContent = async (text: string, targetLanguage: string) => {
   if (targetLanguage === 'English') return text;
   // Use gemini-3-flash-preview for basic text tasks like translation

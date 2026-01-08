@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { User, UserRole, Product, CartItem, Order, AIInsights } from './types';
 import { MOCK_PRODUCTS, CATEGORIES } from './constants';
-import { getAIProductEnrichment, translateContent, getSalesInsights, analyzeRoomForDecor, generateProductImage } from './services/geminiService';
+import { getAIProductEnrichment, translateContent, getSalesInsights, analyzeRoomForDecor, generateProductImage, enhanceProductImage } from './services/geminiService';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -179,6 +179,105 @@ const ProfileDropdown: React.FC<{
   );
 };
 
+const AuthView: React.FC<{
+  onLogin: (u: User) => void;
+  isSelectingAccount: boolean;
+  setIsSelectingAccount: (v: boolean) => void;
+  selectedRoleForSocial: UserRole;
+  setSelectedRoleForSocial: (r: UserRole) => void;
+}> = ({ onLogin, isSelectingAccount, setIsSelectingAccount, selectedRoleForSocial, setSelectedRoleForSocial }) => {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: UserRole.BUYER });
+
+  const triggerSocialLogin = () => {
+    setIsSelectingAccount(true);
+    setSelectedRoleForSocial(formData.role);
+  };
+
+  const handleAccountSelection = (account: typeof MOCK_GOOGLE_ACCOUNTS[0]) => {
+    onLogin({
+      id: `g-${Date.now()}`,
+      name: account.name,
+      role: selectedRoleForSocial, 
+      language: 'English',
+      email: account.email,
+      avatar: account.avatar
+    });
+    setIsSelectingAccount(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onLogin({ id: `u-${Date.now()}`, name: formData.name || 'User', role: formData.role, language: 'English', email: formData.email });
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-600 to-indigo-900 p-4">
+      <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-lg border border-white/20 relative overflow-hidden transition-all duration-500">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-sky-600 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-xl"><i className="fa-solid fa-hands-holding-circle text-4xl"></i></div>
+          <h1 className="text-3xl font-black text-sky-900 uppercase tracking-tighter">MadeByMe</h1>
+          <p className="text-sky-500 font-bold mt-2">Empowering Artisans Worldwide</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <input required type="text" placeholder="Full Name" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 animate-in fade-in slide-in-from-top-2" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          )}
+          <input required type="email" placeholder="Email" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+          <input required type="password" placeholder="Password" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+          <div className="flex gap-4 p-1.5 bg-sky-50 rounded-2xl border border-sky-100">
+            <button type="button" onClick={() => setFormData({...formData, role: UserRole.BUYER})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${formData.role === UserRole.BUYER ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-300'}`}>Buyer</button>
+            <button type="button" onClick={() => setFormData({...formData, role: UserRole.SELLER})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${formData.role === UserRole.SELLER ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-300'}`}>Artisan</button>
+          </div>
+          <Button type="submit" className="w-full py-4 text-lg mt-6">
+            {isSignUp ? 'Create My Account' : 'Login to Marketplace'}
+          </Button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-bold text-sky-600 hover:text-sky-800 transition-colors">
+            {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
+          </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col gap-3">
+           <button onClick={triggerSocialLogin} className="flex items-center justify-center gap-3 py-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" /> Continue with Google</button>
+        </div>
+
+        {isSelectingAccount && (
+          <div className="absolute inset-0 z-50 bg-white p-10 flex flex-col animate-in slide-in-from-bottom-full duration-500">
+            <button onClick={() => setIsSelectingAccount(false)} className="absolute top-6 left-6 text-gray-400 hover:text-sky-600 transition-colors">
+              <i className="fa-solid fa-arrow-left text-xl"></i>
+            </button>
+            <div className="text-center mb-8">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-10 mx-auto mb-4" alt="Google" />
+              <h2 className="text-xl font-bold text-gray-800">Choose an account</h2>
+              <p className="text-sm text-gray-500">to continue to <span className="text-sky-600 font-bold">MadeByMe</span></p>
+            </div>
+            <div className="space-y-2 overflow-y-auto no-scrollbar flex-1">
+              {MOCK_GOOGLE_ACCOUNTS.map((account, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => handleAccountSelection(account)}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-sky-50 rounded-2xl transition-all border border-transparent hover:border-sky-100 group text-left"
+                >
+                  <img src={account.avatar} className="w-10 h-10 rounded-full border border-sky-100 group-hover:scale-105 transition-transform" alt={account.name} />
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-800 leading-none">{account.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">{account.email}</p>
+                  </div>
+                  <i className="fa-solid fa-chevron-right text-[10px] text-sky-100 group-hover:text-sky-300"></i>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const HomeView: React.FC<{
   activeTab: string;
   selectedCategory: string;
@@ -324,7 +423,7 @@ const SellerDashboard: React.FC<{
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
-                  <linearGradient id="colorSales" x1="0" x2="0" y2="1">
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0284c7" stopOpacity={0.1}/>
                     <stop offset="95%" stopColor="#0284c7" stopOpacity={0}/>
                   </linearGradient>
@@ -444,7 +543,7 @@ const OrdersView: React.FC<{
   userOrders: Order[];
   setActiveTab: (tab: any) => void;
 }> = ({ userOrders, setActiveTab }) => (
-  <div className="max-w-4xl auto auto px-4 py-16">
+  <div className="max-w-4xl mx-auto px-4 py-16">
      <div className="mb-12">
       <h2 className="text-3xl font-extrabold text-sky-900 flex items-center gap-3"><i className="fa-solid fa-receipt text-sky-500"></i> Order History</h2>
     </div>
@@ -473,6 +572,7 @@ const AddProductModal: React.FC<{
   const [roughInput, setRoughInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
+  const [enhancingIndex, setEnhancingIndex] = useState<number | null>(null);
   const [enrichedData, setEnrichedData] = useState<any>(null);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [weight, setWeight] = useState(500); 
@@ -503,6 +603,39 @@ const AddProductModal: React.FC<{
       alert("Failed to generate image. Please try again.");
     } finally {
       setImgLoading(false);
+    }
+  };
+
+  const handleRemoveImage = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    if (enhancingIndex === index) return;
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    // Reset enhancing index if we deleted the current one
+    if (enhancingIndex === index) setEnhancingIndex(null);
+  };
+
+  const handleEnhanceImage = async (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    if (enhancingIndex !== null) return;
+    const cat = enrichedData?.category || "Handmade Product";
+    const name = enrichedData?.name || "Artisanal Piece";
+    
+    setEnhancingIndex(index);
+    try {
+      const enhanced = await enhanceProductImage(uploadedImages[index], cat, name);
+      if (enhanced) {
+        setUploadedImages(prev => {
+          const newList = [...prev];
+          newList[index] = enhanced;
+          return newList;
+        });
+      } else {
+        alert("Could not enhance this photo. Check your connection.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setEnhancingIndex(null);
     }
   };
 
@@ -542,56 +675,130 @@ const AddProductModal: React.FC<{
     });
   };
 
+  const renderImageThumbnails = () => (
+    <div className="flex flex-wrap gap-4 mt-4">
+      {uploadedImages.map((img, idx) => (
+        <div key={idx} className={`relative w-24 h-24 rounded-2xl overflow-hidden shadow-sm group border-2 transition-all ${enhancingIndex === idx ? 'border-sky-500 scale-105 animate-pulse' : 'border-transparent'}`}>
+          <img src={img} className="w-full h-full object-cover" alt="prev" />
+          
+          {/* Action Overlay */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity">
+             <button 
+               type="button"
+               onClick={(e) => handleEnhanceImage(e, idx)} 
+               disabled={enhancingIndex !== null}
+               title="AI Background Enhancement"
+               className="w-8 h-8 bg-sky-600 text-white rounded-full flex items-center justify-center hover:bg-sky-700 transition-colors shadow-lg active:scale-90 disabled:opacity-50"
+             >
+               <i className={`fa-solid ${enhancingIndex === idx ? 'fa-spinner animate-spin' : 'fa-wand-magic-sparkles'} text-xs`}></i>
+             </button>
+             <button 
+               type="button"
+               onClick={(e) => handleRemoveImage(e, idx)} 
+               disabled={enhancingIndex !== null}
+               className="w-8 h-8 bg-white/20 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors shadow-lg active:scale-90 disabled:opacity-50"
+             >
+               <i className="fa-solid fa-trash-can text-xs"></i>
+             </button>
+          </div>
+
+          {/* Enhancement Loader */}
+          {enhancingIndex === idx && (
+            <div className="absolute inset-0 bg-sky-900/40 flex items-center justify-center">
+               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            </div>
+          )}
+          
+          {/* Fallback persistent close for mobile if hover fails */}
+          <button 
+            type="button"
+            onClick={(e) => handleRemoveImage(e, idx)}
+            className="md:hidden absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] backdrop-blur-sm"
+          >
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      ))}
+      <button 
+        type="button"
+        onClick={() => fileInputRef.current?.click()} 
+        className="w-24 h-24 border-2 border-dashed border-sky-200 rounded-2xl flex flex-col items-center justify-center text-sky-400 hover:bg-sky-50 transition-colors"
+      >
+        <i className="fa-solid fa-camera text-2xl"></i>
+        <span className="text-[8px] font-bold mt-1 uppercase">Upload</span>
+      </button>
+      <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" />
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-sky-900/60 backdrop-blur-md">
       <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col border border-white/50 animate-in zoom-in duration-300">
         <div className="p-8 border-b border-sky-100 flex justify-between items-center bg-sky-50/50">
-          <h3 className="text-2xl font-bold text-sky-900 flex items-center gap-3"><i className="fa-solid fa-wand-magic-sparkles text-sky-600"></i> Smart Listing</h3>
+          <div className="flex items-center gap-3">
+             <h3 className="text-2xl font-bold text-sky-900">Smart Listing</h3>
+             {enrichedData && <span className="bg-sky-600 text-white text-[10px] px-2 py-1 rounded-full font-black uppercase">AI Mode Active</span>}
+          </div>
           <button onClick={() => setIsAddingProduct(false)} className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"><i className="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <div className="p-8 overflow-y-auto flex-1 no-scrollbar">
           {!enrichedData ? (
             <div className="space-y-8">
               <div>
-                <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest mb-3">Describe your product</label>
-                <textarea value={roughInput} onChange={(e) => setRoughInput(e.target.value)} placeholder="E.g., I made a blue cotton dress with flower embroidery..." className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 text-lg placeholder-sky-200 font-medium resize-none" />
-                <div className="mt-6 flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest mb-3">Weight (g)</label>
-                    <input type="number" value={weight} onChange={e => setWeight(Number(e.target.value))} className="active-focus w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900" placeholder="e.g. 500" />
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest">Photos</label>
+                <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest mb-3">What are you selling?</label>
+                <textarea value={roughInput} onChange={(e) => setRoughInput(e.target.value)} placeholder="Describe your item in simple words. AI will handle the rest..." className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 text-lg placeholder-sky-200 font-medium resize-none" />
+                
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest">Photos & Enhancements</label>
                     <div className="flex items-center gap-3">
                        <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value as any)} className="text-[10px] font-black uppercase tracking-widest bg-sky-50 border border-sky-100 rounded-full px-3 py-1 outline-none text-sky-700">
-                          <option value="1K">1K Res</option>
-                          <option value="2K">2K Res</option>
-                          <option value="4K">4K Res</option>
+                          <option value="1K">Standard (1K)</option>
+                          <option value="2K">High (2K)</option>
+                          <option value="4K">Ultra (4K)</option>
                        </select>
-                       <button onClick={handleAIGenerateImage} disabled={imgLoading} className="text-[10px] font-black uppercase tracking-widest text-sky-600 hover:text-sky-800 flex items-center gap-1.5 bg-sky-100 px-3 py-1 rounded-full border border-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-50">
-                          {imgLoading ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-palette"></i>} 
-                          Generate with AI
+                       <button type="button" onClick={handleAIGenerateImage} disabled={imgLoading} className="text-[10px] font-black uppercase tracking-widest text-sky-600 hover:text-sky-800 flex items-center gap-1.5 bg-sky-100 px-3 py-1 rounded-full border border-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-50">
+                          {imgLoading ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-wand-sparkles"></i>} 
+                          AI Create
                        </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-4">
-                    {uploadedImages.map((img, idx) => (<div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-sm"><img src={img} className="w-full h-full object-cover" alt="prev" /><button onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px]"><i className="fa-solid fa-xmark"></i></button></div>))}
-                    <button onClick={() => fileInputRef.current?.click()} className="w-24 h-24 border-2 border-dashed border-sky-200 rounded-2xl flex flex-col items-center justify-center text-sky-400 hover:bg-sky-50"><i className="fa-solid fa-camera text-2xl"></i></button>
-                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" />
-                  </div>
+                  {renderImageThumbnails()}
                 </div>
               </div>
-              <Button onClick={handleAIEnrich} disabled={loading || !roughInput} className="w-full py-5 text-lg"> {loading ? 'Thinking...' : 'Generate Listing Details'} </Button>
+              <Button onClick={handleAIEnrich} disabled={loading || !roughInput} className="w-full py-5 text-lg"> {loading ? 'Enriching with AI...' : 'Generate Listing Details'} </Button>
             </div>
           ) : (
-            <div className="space-y-8">
-              <input type="text" value={enrichedData.name} onChange={(e) => setEnrichedData({...enrichedData, name: e.target.value})} className="active-focus w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 text-xl" />
-              <textarea value={enrichedData.description} onChange={(e) => setEnrichedData({...enrichedData, description: e.target.value})} className="active-focus w-full h-56 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 leading-relaxed font-medium" />
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setEnrichedData(null)} className="flex-1 py-4">Back</Button>
-                <Button onClick={handleFinalize} className="flex-1 py-4">Confirm & Publish</Button>
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div>
+                 <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Artisan Name</label>
+                 <input type="text" value={enrichedData.name} onChange={(e) => setEnrichedData({...enrichedData, name: e.target.value})} className="active-focus w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 text-xl" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Listing Images</label>
+                {renderImageThumbnails()}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                   <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Category</label>
+                   <input type="text" value={enrichedData.category} onChange={(e) => setEnrichedData({...enrichedData, category: e.target.value})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" />
+                </div>
+                <div>
+                   <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Suggested Price (INR)</label>
+                   <input type="number" value={enrichedData.price} onChange={(e) => setEnrichedData({...enrichedData, price: Number(e.target.value)})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Product Story & Description</label>
+                <textarea value={enrichedData.description} onChange={(e) => setEnrichedData({...enrichedData, description: e.target.value})} className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 leading-relaxed font-medium resize-none" />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <Button variant="outline" onClick={() => setEnrichedData(null)} className="flex-1 py-4">Back to Edit</Button>
+                <Button onClick={handleFinalize} className="flex-1 py-4">Publish Item</Button>
               </div>
             </div>
           )}
@@ -779,140 +986,15 @@ const App: React.FC = () => {
     setActiveTab('home');
   };
 
-  // --- Login & Sign Up View ---
-
-  const AuthView = () => {
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: UserRole.BUYER });
-    const [hasApiKey, setHasApiKey] = useState(false);
-
-    useEffect(() => {
-      const checkKey = async () => {
-        if (window.aistudio?.hasSelectedApiKey) {
-           const ok = await window.aistudio.hasSelectedApiKey();
-           setHasApiKey(ok);
-        } else {
-           setHasApiKey(true);
-        }
-      };
-      checkKey();
-    }, []);
-
-    const openKeyDialog = async () => {
-      if (window.aistudio?.openSelectKey) {
-        await window.aistudio.openSelectKey();
-        setHasApiKey(true);
-      }
-    };
-    
-    const triggerSocialLogin = () => {
-      setIsSelectingAccount(true);
-      setSelectedRoleForSocial(formData.role);
-    };
-
-    const handleAccountSelection = (account: typeof MOCK_GOOGLE_ACCOUNTS[0]) => {
-      setCurrentUser({
-        id: `g-${Date.now()}`,
-        name: account.name,
-        role: selectedRoleForSocial, 
-        language: 'English',
-        email: account.email,
-        avatar: account.avatar
-      });
-      setIsSelectingAccount(false);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      setCurrentUser({ id: `u-${Date.now()}`, name: formData.name || 'User', role: formData.role, language: 'English', email: formData.email });
-    };
-
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-600 to-indigo-900 p-4">
-        <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-lg border border-white/20 relative overflow-hidden transition-all duration-500">
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-sky-600 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-xl"><i className="fa-solid fa-hands-holding-circle text-4xl"></i></div>
-            <h1 className="text-3xl font-black text-sky-900 uppercase tracking-tighter">MadeByMe</h1>
-            <p className="text-sky-500 font-bold mt-2">Empowering Artisans Worldwide</p>
-          </div>
-
-          {!hasApiKey ? (
-            <div className="text-center space-y-6">
-               <div className="p-6 bg-sky-50 rounded-[2rem] border border-sky-100">
-                  <i className="fa-solid fa-key text-sky-400 text-3xl mb-4"></i>
-                  <h3 className="font-bold text-sky-900 mb-2">High-Quality Creation Mode</h3>
-                  <p className="text-xs text-sky-600 leading-relaxed mb-4">
-                     To use advanced AI features like 4K image generation, please select your Google AI API key.
-                     <br/>
-                     <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="underline font-black mt-2 inline-block">Learn about billing</a>
-                  </p>
-                  <Button onClick={openKeyDialog} className="w-full">Select API Key</Button>
-               </div>
-               <p className="text-[10px] text-sky-300 font-bold uppercase tracking-widest cursor-pointer" onClick={() => setHasApiKey(true)}>Skip for now (Limited features)</p>
-            </div>
-          ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {isSignUp && (
-                  <input required type="text" placeholder="Full Name" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 animate-in fade-in slide-in-from-top-2" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                )}
-                <input required type="email" placeholder="Email" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                <input required type="password" placeholder="Password" className="w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-                <div className="flex gap-4 p-1.5 bg-sky-50 rounded-2xl border border-sky-100">
-                  <button type="button" onClick={() => setFormData({...formData, role: UserRole.BUYER})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${formData.role === UserRole.BUYER ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-300'}`}>Buyer</button>
-                  <button type="button" onClick={() => setFormData({...formData, role: UserRole.SELLER})} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${formData.role === UserRole.SELLER ? 'bg-white text-sky-600 shadow-sm' : 'text-sky-300'}`}>Artisan</button>
-                </div>
-                <Button type="submit" className="w-full py-4 text-lg mt-6">
-                  {isSignUp ? 'Create My Account' : 'Login to Marketplace'}
-                </Button>
-              </form>
-              
-              <div className="mt-6 text-center">
-                <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-bold text-sky-600 hover:text-sky-800 transition-colors">
-                  {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
-                </button>
-              </div>
-
-              <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col gap-3">
-                 <button onClick={triggerSocialLogin} className="flex items-center justify-center gap-3 py-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" /> Continue with Google</button>
-              </div>
-            </>
-          )}
-
-          {isSelectingAccount && (
-            <div className="absolute inset-0 z-50 bg-white p-10 flex flex-col animate-in slide-in-from-bottom-full duration-500">
-              <button onClick={() => setIsSelectingAccount(false)} className="absolute top-6 left-6 text-gray-400 hover:text-sky-600 transition-colors">
-                <i className="fa-solid fa-arrow-left text-xl"></i>
-              </button>
-              <div className="text-center mb-8">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-10 mx-auto mb-4" alt="Google" />
-                <h2 className="text-xl font-bold text-gray-800">Choose an account</h2>
-                <p className="text-sm text-gray-500">to continue to <span className="text-sky-600 font-bold">MadeByMe</span></p>
-              </div>
-              <div className="space-y-2 overflow-y-auto no-scrollbar flex-1">
-                {MOCK_GOOGLE_ACCOUNTS.map((account, idx) => (
-                  <button 
-                    key={idx} 
-                    onClick={() => handleAccountSelection(account)}
-                    className="w-full flex items-center gap-4 p-4 hover:bg-sky-50 rounded-2xl transition-all border border-transparent hover:border-sky-100 group text-left"
-                  >
-                    <img src={account.avatar} className="w-10 h-10 rounded-full border border-sky-100 group-hover:scale-105 transition-transform" alt={account.name} />
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-800 leading-none">{account.name}</p>
-                      <p className="text-xs text-gray-400 mt-1">{account.email}</p>
-                    </div>
-                    <i className="fa-solid fa-chevron-right text-[10px] text-sky-100 group-hover:text-sky-300"></i>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  if (!currentUser) return <AuthView />;
+  if (!currentUser) return (
+    <AuthView 
+      onLogin={setCurrentUser} 
+      isSelectingAccount={isSelectingAccount}
+      setIsSelectingAccount={setIsSelectingAccount}
+      selectedRoleForSocial={selectedRoleForSocial}
+      setSelectedRoleForSocial={setSelectedRoleForSocial}
+    />
+  );
 
   return (
     <div className="min-h-screen pb-24 bg-sky-50/30">
