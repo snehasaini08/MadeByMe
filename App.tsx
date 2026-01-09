@@ -610,7 +610,6 @@ const AddProductModal: React.FC<{
     e.stopPropagation();
     if (enhancingIndex === index) return;
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
-    // Reset enhancing index if we deleted the current one
     if (enhancingIndex === index) setEnhancingIndex(null);
   };
 
@@ -680,53 +679,21 @@ const AddProductModal: React.FC<{
       {uploadedImages.map((img, idx) => (
         <div key={idx} className={`relative w-24 h-24 rounded-2xl overflow-hidden shadow-sm group border-2 transition-all ${enhancingIndex === idx ? 'border-sky-500 scale-105 animate-pulse' : 'border-transparent'}`}>
           <img src={img} className="w-full h-full object-cover" alt="prev" />
-          
-          {/* Action Overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity">
-             <button 
-               type="button"
-               onClick={(e) => handleEnhanceImage(e, idx)} 
-               disabled={enhancingIndex !== null}
-               title="AI Background Enhancement"
-               className="w-8 h-8 bg-sky-600 text-white rounded-full flex items-center justify-center hover:bg-sky-700 transition-colors shadow-lg active:scale-90 disabled:opacity-50"
-             >
+             <button type="button" onClick={(e) => handleEnhanceImage(e, idx)} disabled={enhancingIndex !== null} className="w-8 h-8 bg-sky-600 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 disabled:opacity-50">
                <i className={`fa-solid ${enhancingIndex === idx ? 'fa-spinner animate-spin' : 'fa-wand-magic-sparkles'} text-xs`}></i>
              </button>
-             <button 
-               type="button"
-               onClick={(e) => handleRemoveImage(e, idx)} 
-               disabled={enhancingIndex !== null}
-               className="w-8 h-8 bg-white/20 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors shadow-lg active:scale-90 disabled:opacity-50"
-             >
+             <button type="button" onClick={(e) => handleRemoveImage(e, idx)} disabled={enhancingIndex !== null} className="w-8 h-8 bg-white/20 hover:bg-red-500 text-white rounded-full flex items-center justify-center transition-colors shadow-lg active:scale-90">
                <i className="fa-solid fa-trash-can text-xs"></i>
              </button>
           </div>
-
-          {/* Enhancement Loader */}
           {enhancingIndex === idx && (
-            <div className="absolute inset-0 bg-sky-900/40 flex items-center justify-center">
-               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            </div>
+            <div className="absolute inset-0 bg-sky-900/40 flex items-center justify-center"><div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div></div>
           )}
-          
-          {/* Fallback persistent close for mobile if hover fails */}
-          <button 
-            type="button"
-            onClick={(e) => handleRemoveImage(e, idx)}
-            className="md:hidden absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] backdrop-blur-sm"
-          >
-            <i className="fa-solid fa-xmark"></i>
-          </button>
+          <button type="button" onClick={(e) => handleRemoveImage(e, idx)} className="md:hidden absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px]"><i className="fa-solid fa-xmark"></i></button>
         </div>
       ))}
-      <button 
-        type="button"
-        onClick={() => fileInputRef.current?.click()} 
-        className="w-24 h-24 border-2 border-dashed border-sky-200 rounded-2xl flex flex-col items-center justify-center text-sky-400 hover:bg-sky-50 transition-colors"
-      >
-        <i className="fa-solid fa-camera text-2xl"></i>
-        <span className="text-[8px] font-bold mt-1 uppercase">Upload</span>
-      </button>
+      <button type="button" onClick={() => fileInputRef.current?.click()} className="w-24 h-24 border-2 border-dashed border-sky-200 rounded-2xl flex flex-col items-center justify-center text-sky-400 hover:bg-sky-50"><i className="fa-solid fa-camera text-2xl"></i><span className="text-[8px] font-bold mt-1 uppercase">Upload</span></button>
       <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" />
     </div>
   );
@@ -747,20 +714,11 @@ const AddProductModal: React.FC<{
               <div>
                 <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest mb-3">What are you selling?</label>
                 <textarea value={roughInput} onChange={(e) => setRoughInput(e.target.value)} placeholder="Describe your item in simple words. AI will handle the rest..." className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 text-lg placeholder-sky-200 font-medium resize-none" />
-                
                 <div className="mt-8">
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-bold text-sky-800 uppercase tracking-widest">Photos & Enhancements</label>
+                  <div className="flex justify-between items-center mb-1"><label className="block text-sm font-bold text-sky-800 uppercase tracking-widest">Photos & Enhancements</label>
                     <div className="flex items-center gap-3">
-                       <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value as any)} className="text-[10px] font-black uppercase tracking-widest bg-sky-50 border border-sky-100 rounded-full px-3 py-1 outline-none text-sky-700">
-                          <option value="1K">Standard (1K)</option>
-                          <option value="2K">High (2K)</option>
-                          <option value="4K">Ultra (4K)</option>
-                       </select>
-                       <button type="button" onClick={handleAIGenerateImage} disabled={imgLoading} className="text-[10px] font-black uppercase tracking-widest text-sky-600 hover:text-sky-800 flex items-center gap-1.5 bg-sky-100 px-3 py-1 rounded-full border border-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-50">
-                          {imgLoading ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-wand-sparkles"></i>} 
-                          AI Create
-                       </button>
+                       <select value={selectedSize} onChange={(e) => setSelectedSize(e.target.value as any)} className="text-[10px] font-black uppercase tracking-widest bg-sky-50 border border-sky-100 rounded-full px-3 py-1 outline-none text-sky-700"><option value="1K">Standard (1K)</option><option value="2K">High (2K)</option><option value="4K">Ultra (4K)</option></select>
+                       <button type="button" onClick={handleAIGenerateImage} disabled={imgLoading} className="text-[10px] font-black uppercase tracking-widest text-sky-600 hover:text-sky-800 flex items-center gap-1.5 bg-sky-100 px-3 py-1 rounded-full border border-sky-200 shadow-sm transition-all active:scale-95 disabled:opacity-50">{imgLoading ? <i className="fa-solid fa-spinner animate-spin"></i> : <i className="fa-solid fa-wand-sparkles"></i>} AI Create</button>
                     </div>
                   </div>
                   {renderImageThumbnails()}
@@ -770,36 +728,14 @@ const AddProductModal: React.FC<{
             </div>
           ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <div>
-                 <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Artisan Name</label>
-                 <input type="text" value={enrichedData.name} onChange={(e) => setEnrichedData({...enrichedData, name: e.target.value})} className="active-focus w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 text-xl" />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Listing Images</label>
-                {renderImageThumbnails()}
-              </div>
-              
+              <div><label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Artisan Name</label><input type="text" value={enrichedData.name} onChange={(e) => setEnrichedData({...enrichedData, name: e.target.value})} className="active-focus w-full p-4 bg-sky-50 border border-sky-100 rounded-2xl outline-none font-bold text-sky-900 text-xl" /></div>
+              <div><label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Listing Images</label>{renderImageThumbnails()}</div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                   <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Category</label>
-                   <input type="text" value={enrichedData.category} onChange={(e) => setEnrichedData({...enrichedData, category: e.target.value})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" />
-                </div>
-                <div>
-                   <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Suggested Price (INR)</label>
-                   <input type="number" value={enrichedData.price} onChange={(e) => setEnrichedData({...enrichedData, price: Number(e.target.value)})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" />
-                </div>
+                <div><label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Category</label><input type="text" value={enrichedData.category} onChange={(e) => setEnrichedData({...enrichedData, category: e.target.value})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" /></div>
+                <div><label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Suggested Price (INR)</label><input type="number" value={enrichedData.price} onChange={(e) => setEnrichedData({...enrichedData, price: Number(e.target.value)})} className="active-focus w-full p-3 bg-sky-50 border border-sky-100 rounded-xl outline-none font-bold text-sky-900 text-sm" /></div>
               </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Product Story & Description</label>
-                <textarea value={enrichedData.description} onChange={(e) => setEnrichedData({...enrichedData, description: e.target.value})} className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 leading-relaxed font-medium resize-none" />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Button variant="outline" onClick={() => setEnrichedData(null)} className="flex-1 py-4">Back to Edit</Button>
-                <Button onClick={handleFinalize} className="flex-1 py-4">Publish Item</Button>
-              </div>
+              <div><label className="block text-[10px] font-black text-sky-400 uppercase tracking-widest mb-2">Product Story & Description</label><textarea value={enrichedData.description} onChange={(e) => setEnrichedData({...enrichedData, description: e.target.value})} className="active-focus w-full h-40 p-5 bg-sky-50 border border-sky-100 rounded-[2rem] outline-none text-gray-900 leading-relaxed font-medium resize-none" /></div>
+              <div className="flex gap-4 pt-4"><Button variant="outline" onClick={() => setEnrichedData(null)} className="flex-1 py-4">Back to Edit</Button><Button onClick={handleFinalize} className="flex-1 py-4">Publish Item</Button></div>
             </div>
           )}
         </div>
@@ -828,274 +764,142 @@ const App: React.FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedRoleForSocial, setSelectedRoleForSocial] = useState(UserRole.BUYER);
   
-  // Checkout Shipping States
   const [deliveryRegion, setDeliveryRegion] = useState('local');
   const [shippingDetails, setShippingDetails] = useState({ name: '', address: '', city: '', pincode: '' });
 
-  // Load AI Tips for Seller
   useEffect(() => {
     if (currentUser?.role === UserRole.SELLER) {
       const fetchTips = async () => {
         const history = "Vase: 5 sales, Kurta: 2 sales, Earrings: 10 sales";
         const result = await getSalesInsights(history);
-        if (result && result.tips) {
-          setAiTips(result.tips);
-        }
+        if (result && result.tips) setAiTips(result.tips);
       };
       fetchTips();
     }
   }, [currentUser]);
 
-  // Filtered Products
   const filteredProducts = useMemo(() => {
     const baseList = activeTab === 'wishlist' ? wishlist : products;
     return baseList.filter(p => {
-      // Search logic
       const query = searchQuery.toLowerCase();
-      const matchesSearch = p.name.toLowerCase().includes(query) || 
-                           p.tags.some(t => t.toLowerCase().includes(query)) ||
-                           p.category.toLowerCase().includes(query);
-      
-      // Category logic
+      const matchesSearch = p.name.toLowerCase().includes(query) || p.tags.some(t => t.toLowerCase().includes(query)) || p.category.toLowerCase().includes(query);
       const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-
-      // AI Vision Filter logic
       let matchesAi = true;
       if (aiRoomRecommendations && activeTab === 'home') {
         const aiTags = aiRoomRecommendations.suggestedTags.map((t: string) => t.toLowerCase());
         const aiCategories = aiRoomRecommendations.suggestedCategories.map((c: string) => c.toLowerCase());
-        matchesAi = p.tags.some(t => aiTags.includes(t.toLowerCase())) || 
-                    aiCategories.some(c => p.category.toLowerCase().includes(c)) ||
-                    p.description.toLowerCase().includes(aiRoomRecommendations.style.toLowerCase());
+        matchesAi = p.tags.some(t => aiTags.includes(t.toLowerCase())) || aiCategories.some(c => p.category.toLowerCase().includes(c)) || p.description.toLowerCase().includes(aiRoomRecommendations.style.toLowerCase());
       }
-
       return matchesSearch && matchesCategory && matchesAi;
     });
   }, [products, wishlist, searchQuery, selectedCategory, activeTab, aiRoomRecommendations]);
 
-  // Seller's specific products
-  const sellerProducts = useMemo(() => {
-    return products.filter(p => p.sellerId === currentUser?.id || p.sellerName === 'Amit Artisans'); 
-  }, [products, currentUser]);
-
+  const sellerProducts = useMemo(() => products.filter(p => p.sellerId === currentUser?.id || p.sellerName === 'Amit Artisans'), [products, currentUser]);
   const totalCartPrice = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cart]);
-
   const totalShippingFee = useMemo(() => {
     if (cart.length === 0) return 0;
     const totalWeight = cart.reduce((acc, item) => acc + ((item.weightInGrams || 500) * item.quantity), 0);
     const region = REGIONS.find(r => r.id === deliveryRegion) || REGIONS[0];
-    const weightUnits = Math.ceil(totalWeight / 500);
-    const weightFee = weightUnits * 20 * region.multiplier;
-    return Math.round(region.base + weightFee);
+    return Math.round(region.base + (Math.ceil(totalWeight / 500) * 20 * region.multiplier));
   }, [cart, deliveryRegion]);
 
   const startVoiceSearch = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser.");
-      return;
-    }
+    if (!SpeechRecognition) return alert("Voice not supported.");
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event: any) => {
-      setSearchQuery(event.results[0][0].transcript);
-      setActiveTab('home');
-    };
+    recognition.onresult = (event: any) => { setSearchQuery(event.results[0][0].transcript); setActiveTab('home'); };
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
     recognition.start();
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-
     setIsAnalyzing(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
-      if (reader.result && typeof reader.result === 'string') {
-        const base64 = reader.result;
-        const result = await analyzeRoomForDecor(base64);
-        if (result) {
-          const typedResult = result as any;
-          setAiRoomRecommendations({
-            ...typedResult,
-            image: base64
-          });
-          setActiveTab('home');
-        }
+      if (typeof reader.result === 'string') {
+        const result = await analyzeRoomForDecor(reader.result);
+        if (result) { setAiRoomRecommendations({ ...result, image: reader.result }); setActiveTab('home'); }
       }
       setIsAnalyzing(false);
     };
     reader.readAsDataURL(file as Blob);
   };
 
-  const clearAiRecommendations = () => {
-    setAiRoomRecommendations(null);
-  };
-
   const handleAddToCart = (product: Product) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
+      if (existing) return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       return [...prev, { ...product, quantity: 1 }];
     });
   };
 
   const handleToggleWishlist = (product: Product) => {
-    setWishlist(prev => {
-      const exists = prev.find(p => p.id === product.id);
-      if (exists) return prev.filter(p => p.id !== product.id);
-      return [...prev, product];
-    });
+    setWishlist(prev => prev.find(p => p.id === product.id) ? prev.filter(p => p.id !== product.id) : [...prev, product]);
   };
 
   const handlePlaceOrder = () => {
-    if (!shippingDetails.name || !shippingDetails.address) {
-      alert("Please complete shipping details");
-      return;
-    }
-    const newOrder: Order = {
-      id: `ORD-${Math.floor(Math.random() * 10000)}`,
-      items: [...cart],
-      total: totalCartPrice + totalShippingFee,
-      shippingFee: totalShippingFee,
-      status: 'Packed',
-      date: new Date().toLocaleDateString(),
-      address: `${shippingDetails.address}, ${shippingDetails.city} - ${shippingDetails.pincode}`
-    };
-    setUserOrders(prev => [newOrder, ...prev]);
-    setCart([]);
-    setActiveTab('orders');
-    alert("Order placed successfully!");
+    if (!shippingDetails.name || !shippingDetails.address) return alert("Complete details.");
+    setUserOrders(prev => [{ id: `ORD-${Math.floor(Math.random() * 10000)}`, items: [...cart], total: totalCartPrice + totalShippingFee, shippingFee: totalShippingFee, status: 'Packed', date: new Date().toLocaleDateString(), address: `${shippingDetails.address}, ${shippingDetails.city}` }, ...prev]);
+    setCart([]); setActiveTab('orders'); alert("Ordered!");
   };
 
-  const deleteProduct = (id: string) => {
-    if (confirm("Are you sure you want to remove this listing?")) {
-      setProducts(prev => prev.filter(p => p.id !== id));
-    }
-  };
+  const deleteProduct = (id: string) => { if (confirm("Remove listing?")) setProducts(prev => prev.filter(p => p.id !== id)); };
+  const handleLogout = () => { setCurrentUser(null); setIsProfileOpen(false); setActiveTab('home'); };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setIsProfileOpen(false);
-    setActiveTab('home');
-  };
-
-  if (!currentUser) return (
-    <AuthView 
-      onLogin={setCurrentUser} 
-      isSelectingAccount={isSelectingAccount}
-      setIsSelectingAccount={setIsSelectingAccount}
-      selectedRoleForSocial={selectedRoleForSocial}
-      setSelectedRoleForSocial={setSelectedRoleForSocial}
-    />
-  );
+  if (!currentUser) return <AuthView onLogin={setCurrentUser} isSelectingAccount={isSelectingAccount} setIsSelectingAccount={setIsSelectingAccount} selectedRoleForSocial={selectedRoleForSocial} setSelectedRoleForSocial={setSelectedRoleForSocial} />;
 
   return (
-    <div className="min-h-screen pb-24 bg-sky-50/30">
-      <Navbar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        isListening={isListening} 
-        isAnalyzing={isAnalyzing}
-        onImageUpload={handleImageUpload}
-        startVoiceSearch={startVoiceSearch} 
-        currentUser={currentUser} 
-        toggleProfile={() => setIsProfileOpen(!isProfileOpen)} 
-        cartLength={cart.length} 
-      />
+    <div className="min-h-screen pb-28 bg-sky-50/30">
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} searchQuery={searchQuery} setSearchQuery={setSearchQuery} isListening={isListening} isAnalyzing={isAnalyzing} onImageUpload={handleImageUpload} startVoiceSearch={startVoiceSearch} currentUser={currentUser} toggleProfile={() => setIsProfileOpen(!isProfileOpen)} cartLength={cart.length} />
       
-      {isProfileOpen && (
-        <ProfileDropdown 
-          user={currentUser} 
-          onClose={() => setIsProfileOpen(false)} 
-          onLogout={handleLogout} 
-        />
-      )}
+      {isProfileOpen && <ProfileDropdown user={currentUser} onClose={() => setIsProfileOpen(false)} onLogout={handleLogout} />}
 
       <main className="animate-in fade-in duration-700">
-        {(activeTab === 'home' || activeTab === 'wishlist') && (
-          <HomeView 
-            activeTab={activeTab} 
-            selectedCategory={selectedCategory} 
-            setSelectedCategory={setSelectedCategory} 
-            filteredProducts={filteredProducts} 
-            wishlist={wishlist} 
-            handleToggleWishlist={handleToggleWishlist} 
-            handleAddToCart={handleAddToCart} 
-            setActiveTab={setActiveTab} 
-            aiRoomRecommendations={aiRoomRecommendations}
-            clearAiRecommendations={clearAiRecommendations}
-          />
-        )}
-        
-        {activeTab === 'seller_dashboard' && (
-          <SellerDashboard 
-            currentUser={currentUser} 
-            setIsAddingProduct={setIsAddingProduct} 
-            aiTips={aiTips} 
-            sellerProducts={sellerProducts} 
-            deleteProduct={deleteProduct} 
-          />
-        )}
-        
-        {activeTab === 'cart' && (
-          <CartView 
-            cart={cart} 
-            setCart={setCart} 
-            totalCartPrice={totalCartPrice} 
-            setActiveTab={setActiveTab} 
-          />
-        )}
-        
-        {activeTab === 'checkout' && (
-          <CheckoutView 
-            shippingDetails={shippingDetails} 
-            setShippingDetails={setShippingDetails} 
-            deliveryRegion={deliveryRegion} 
-            setDeliveryRegion={setDeliveryRegion} 
-            totalCartPrice={totalCartPrice} 
-            totalShippingFee={totalShippingFee} 
-            handlePlaceOrder={handlePlaceOrder} 
-          />
-        )}
-        
-        {activeTab === 'orders' && (
-          <OrdersView 
-            userOrders={userOrders} 
-            setActiveTab={setActiveTab} 
-          />
-        )}
+        {(activeTab === 'home' || activeTab === 'wishlist') && <HomeView activeTab={activeTab} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} filteredProducts={filteredProducts} wishlist={wishlist} handleToggleWishlist={handleToggleWishlist} handleAddToCart={handleAddToCart} setActiveTab={setActiveTab} aiRoomRecommendations={aiRoomRecommendations} clearAiRecommendations={() => setAiRoomRecommendations(null)} />}
+        {activeTab === 'seller_dashboard' && <SellerDashboard currentUser={currentUser} setIsAddingProduct={setIsAddingProduct} aiTips={aiTips} sellerProducts={sellerProducts} deleteProduct={deleteProduct} />}
+        {activeTab === 'cart' && <CartView cart={cart} setCart={setCart} totalCartPrice={totalCartPrice} setActiveTab={setActiveTab} />}
+        {activeTab === 'checkout' && <CheckoutView shippingDetails={shippingDetails} setShippingDetails={setShippingDetails} deliveryRegion={deliveryRegion} setDeliveryRegion={setDeliveryRegion} totalCartPrice={totalCartPrice} totalShippingFee={totalShippingFee} handlePlaceOrder={handlePlaceOrder} />}
+        {activeTab === 'orders' && <OrdersView userOrders={userOrders} setActiveTab={setActiveTab} />}
       </main>
 
-      {isAddingProduct && (
-        <AddProductModal 
-          setIsAddingProduct={setIsAddingProduct} 
-          currentUser={currentUser} 
-          setProducts={setProducts} 
-        />
-      )}
+      {isAddingProduct && <AddProductModal setIsAddingProduct={setIsAddingProduct} currentUser={currentUser} setProducts={setProducts} />}
 
-      {/* Mobile Tab Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-sky-100 md:hidden flex justify-around py-5 px-4 shadow-2xl rounded-t-[2.5rem] z-[50]">
-         <button onClick={() => setActiveTab('home')} className={`text-2xl transition-all ${activeTab === 'home' ? 'text-sky-600 scale-125' : 'text-gray-300'}`}><i className="fa-solid fa-house"></i></button>
-         {currentUser.role === UserRole.SELLER ? (
-            <button onClick={() => setActiveTab('seller_dashboard')} className={`text-2xl transition-all ${activeTab === 'seller_dashboard' ? 'text-sky-600 scale-125' : 'text-gray-300'}`}><i className="fa-solid fa-store"></i></button>
-         ) : (
-            <button onClick={() => setActiveTab('wishlist')} className={`text-2xl transition-all ${activeTab === 'wishlist' ? 'text-red-500 scale-125' : 'text-gray-300'}`}><i className="fa-solid fa-heart"></i></button>
-         )}
-         <button onClick={() => setActiveTab('cart')} className={`text-2xl transition-all relative ${activeTab === 'cart' ? 'text-sky-600 scale-125' : 'text-gray-300'}`}>
-            <i className="fa-solid fa-cart-shopping"></i>
-            {cart.length > 0 && <span className="absolute -top-2 -right-2 bg-sky-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold">{cart.length}</span>}
+      {/* Persistent Labeled Mobile Tab Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-sky-100 md:hidden flex justify-around items-center pt-3 pb-6 px-4 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[2.5rem] z-[100]">
+         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'home' ? 'text-sky-600' : 'text-gray-300'}`}>
+            <i className="fa-solid fa-house text-xl"></i>
+            <span className="text-[10px] font-black uppercase tracking-tighter">Market</span>
          </button>
-         <button onClick={() => setActiveTab('orders')} className={`text-2xl transition-all ${activeTab === 'orders' ? 'text-sky-600 scale-125' : 'text-gray-300'}`}><i className="fa-solid fa-receipt"></i></button>
+         
+         {currentUser.role === UserRole.SELLER ? (
+            <button onClick={() => setActiveTab('seller_dashboard')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'seller_dashboard' ? 'text-sky-600 scale-110' : 'text-gray-300'}`}>
+               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${activeTab === 'seller_dashboard' ? 'bg-sky-600 text-white shadow-lg' : 'bg-sky-50'}`}>
+                  <i className="fa-solid fa-store text-lg"></i>
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-tighter">Studio</span>
+            </button>
+         ) : (
+            <button onClick={() => setActiveTab('wishlist')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'wishlist' ? 'text-red-500' : 'text-gray-300'}`}>
+               <i className="fa-solid fa-heart text-xl"></i>
+               <span className="text-[10px] font-black uppercase tracking-tighter">Liked</span>
+            </button>
+         )}
+
+         <button onClick={() => setActiveTab('cart')} className={`flex flex-col items-center gap-1 transition-all relative ${activeTab === 'cart' ? 'text-sky-600' : 'text-gray-300'}`}>
+            <i className="fa-solid fa-cart-shopping text-xl"></i>
+            {cart.length > 0 && <span className="absolute -top-1.5 -right-2 bg-sky-600 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center font-bold border border-white">{cart.length}</span>}
+            <span className="text-[10px] font-black uppercase tracking-tighter">Basket</span>
+         </button>
+
+         <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'orders' ? 'text-sky-600' : 'text-gray-300'}`}>
+            <i className="fa-solid fa-receipt text-xl"></i>
+            <span className="text-[10px] font-black uppercase tracking-tighter">Orders</span>
+         </button>
       </div>
     </div>
   );
